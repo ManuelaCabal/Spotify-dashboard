@@ -11,28 +11,23 @@ st.set_page_config(page_title="Spotify Insights Pro", layout="wide", page_icon="
 
 st.markdown("""
 <style>
-/* Fondo general */
 .stApp {
     background-color: #0b0b0f;
     color: white;
 }
 
-/* Títulos */
 h1, h2, h3 {
     color: #c084fc !important;
 }
 
-/* Texto */
 p, div, span {
     color: #e5e5e5;
 }
 
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background-color: #0f0f14;
 }
 
-/* inputs */
 input, textarea {
     background-color: #111116 !important;
     color: white !important;
@@ -78,7 +73,7 @@ try:
     for a in top_artists.get("items", []):
         artists.append({
             "Artista": a.get("name", "Unknown"),
-            "Seguidores": a.get("followers", {}).get("total", 0)
+            "Imagen": a.get("images", [{}])[0].get("url", "") if a.get("images") else ""
         })
 
     df_artists = pd.DataFrame(artists).dropna()
@@ -89,7 +84,6 @@ try:
     tracks = []
 
     for t in top_tracks.get("items", []):
-
         tracks.append({
             "Cancion": t.get("name", "Unknown"),
             "Artista": t["artists"][0]["name"] if t.get("artists") else "Unknown",
@@ -120,35 +114,22 @@ try:
     # ========================
     with tab1:
 
-        st.subheader("🎤 Tus artistas")
+        st.subheader("🎤 Tus artistas más escuchados")
 
-        # 🔥 TABLA OSCURA REAL
-        st.dataframe(
-            df_artists.style.set_properties(
-                **{
-                    "background-color": "#111116",
-                    "color": "#ffffff",
-                    "border-color": "#2a2a3a"
-                }
-            ),
-            use_container_width=True
-        )
-
-        st.subheader("🖼️ Top artistas")
-
+        # SOLO TOP ARTISTAS CON IMAGEN
         for i, row in df_artists.head(10).iterrows():
 
             col1, col2 = st.columns([1, 4])
 
             with col1:
-                img = top_artists["items"][i]["images"]
-                if img:
-                    st.image(img[0]["url"], width=100)
+                if row["Imagen"]:
+                    st.image(row["Imagen"], width=100)
 
             with col2:
                 st.markdown(f"""
-                <div style="color:#ff4ecd; font-size:18px;"><b>{row['Artista']}</b></div>
-                <div style="color:#c084fc;">👥 {row['Seguidores']} seguidores</div>
+                <div style="color:#ff4ecd; font-size:18px;">
+                    <b>{row['Artista']}</b>
+                </div>
                 """, unsafe_allow_html=True)
 
     # ========================
@@ -158,7 +139,6 @@ try:
 
         st.subheader("🎵 Tus canciones")
 
-        # 🔥 TABLA OSCURA REAL (SIN IMAGEN)
         st.dataframe(
             df_tracks[["Cancion", "Artista", "Album"]].style.set_properties(
                 **{
